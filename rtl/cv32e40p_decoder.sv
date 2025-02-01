@@ -2981,8 +2981,58 @@ module cv32e40p_decoder
 
           illegal_insn_o = csr_illegal;
 
+        end    
+      end
+
+      7'b01010_11: begin // mnn.pair_extract
+        if (instr_rdata_i[14:13] == 3'b111) begin
+        // v8i4 -> v2i16 unpack:
+        // decode: operand A: rs1, operand B: immediate 2bit
+        // offset calculation: imm2*8 + 0
+        // bit extract: 4 bit weight
+        // sign extend: 4 -> 16 bit
+        // offset calculation: imm2*8 + 4
+        // bitextract: 4 bit weight
+        // sign extend: 4 -> 16 bit
+        // pack v2i16
+        // write back
+
+          alu_en              = 1'b1;
+          alu_operator_o      = ALU_PEXT; // custom opcode
+          
+          // enable rs1 as operand a
+          rega_used_o         = 1'b1;             // rs1 is used
+          alu_op_a_mux_sel_o  = OP_A_REGA_OR_FWD; // bmask a
+
+          // select immediate as operand b
+          alu_op_b_mux_sel_o  = OP_B_IMM;
+          imm_b_mux_sel_o     = IMMB_I;         // imm_i_type 31:20
+          
+          // Enable write back to RD
+          regc_used_o           = 1'b1;
+          regc_mux_o            = REGC_RD;
+
+        /* 
+        ALU input:
+          - packed weights (rs1)
+          - 2x what bits to extract (immediate)
+
+        Problem: with existing bit extraction
+          - ALU expects lower and upper bitmask: bmask_a and bmask_b
+          - ALU supports 3 input operands a, b and c
+          - only a and b can be immediate
+          - c can not be an immediate, however it also cannot be REGA (rs1)
+
+          solution: 
+          - somehow make due with a single immediate?
+          - extend ALU?
+
+
+        */
         end
       end
+    
+
       default: illegal_insn_o = 1'b1;
     endcase
 

@@ -140,6 +140,7 @@ package cv32e40p_pkg;
 
     // Insert/extract
     ALU_INS = 7'b0101101,
+    ALU_PEXT = 7'b0111111,
 
     // min/max
     ALU_MIN  = 7'b0010000,
@@ -655,7 +656,7 @@ package cv32e40p_pkg;
   // multiplication immediates
   parameter MIMM_ZERO = 1'b0;
   parameter MIMM_S3 = 1'b1;
-
+`
   // operand c selection
   parameter OP_C_REGC_OR_FWD = 2'b00;
   parameter OP_C_REGB_OR_FWD = 2'b01;
