@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 //FIXME: the core tb does not have the ability to select PULP/NO_PULP at
 //       compile-time, so we set a default MISA to NO_PULP value.  This
@@ -82,6 +83,33 @@ int main(int argc, char *argv[])
     printf("\nHELLO WORLD!!!\n");
     printf("This is the OpenHW Group CV32E40P CORE-V processor core.\n");
     printf("CV32E40P is a RISC-V ISA compliant core with the following attributes:\n");
+    // ---------------------------------------------------------------------------------
+
+    uint32_t v8i4weights = 0x76543210;  // (+7 +6 +5 +4 +3 +2 +1 +0) -> 0b0111_0110_0101_0100_0011_0010_0001_0000
+    uint32_t v8i4weights2 = 0x89abcdef;  // (-8 -7 -6 -5 -4 -3 -2 -1) -> 0b1000_1001_1010_1011_1100_1101_1110_1111
+    uint32_t unpacked = 0;
+    uint32_t unpacked2 = 0;
+
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 0" : "=r" (unpacked) : "r" (v8i4weights));
+    printf("unpacked[idx=0] = %08x\n", unpacked);    // expect 0x0001_0000
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 1" : "=r" (unpacked) : "r" (v8i4weights));
+    printf("unpacked[idx=1] = %08x\n", unpacked);    // expect 0x0003_0002
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 2" : "=r" (unpacked) : "r" (v8i4weights));
+    printf("unpacked[idx=2] = %08x\n", unpacked);    // expect 0x0005_0004
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 3" : "=r" (unpacked) : "r" (v8i4weights));
+    printf("unpacked[idx=3] = %08x\n", unpacked);    // expect 0x0007_0006
+
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 0" : "=r" (unpacked2) : "r" (v8i4weights2));
+    printf("unpacked2[idx=0] = %08x\n", unpacked2);    // expect 0xfffe_ffff
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 1" : "=r" (unpacked2) : "r" (v8i4weights2));
+    printf("unpacked2[idx=1] = %08x\n", unpacked2);    // expect 0xfffc_fffd
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 2" : "=r" (unpacked2) : "r" (v8i4weights2));
+    printf("unpacked2[idx=2] = %08x\n", unpacked2);    // expect 0xfffa_fffb
+    __asm__ volatile(".insn i 0x2B, 0x7, %0, %1, 3" : "=r" (unpacked2) : "r" (v8i4weights2));
+    printf("unpacked2[idx=3] = %08x\n", unpacked2);    // expect 0xfff8_fff9
+
+
+    // ----------------------------------------------------------------------------------
     printf("\tmvendorid = 0x%x\n", mvendorid_rval);
     printf("\tmarchid   = 0x%x\n", marchid_rval);
     printf("\tmimpid    = 0x%x\n", mimpid_rval);
